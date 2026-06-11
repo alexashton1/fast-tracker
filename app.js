@@ -97,12 +97,31 @@ const emptyHistory   = $('emptyHistory');
 const setupSection   = $('setupSection');
 const customInput    = $('customInput');
 const customHoursInput = $('customHours');
-const bodyIntro      = $('bodyIntro');
+const bodyIntro        = $('bodyIntro');
 const currentStageCard = $('currentStageCard');
-const csName         = $('csName');
-const csTime         = $('csTime');
-const csDesc         = $('csDesc');
-const timeline       = $('timeline');
+const csName           = $('csName');
+const csTime           = $('csTime');
+const csDesc           = $('csDesc');
+const timeline         = $('timeline');
+const startTimeToggle  = $('startTimeToggle');
+const startTimePicker  = $('startTimePicker');
+const startTimeInput   = $('startTimeInput');
+
+function toggleStartTime() {
+  const open = !startTimePicker.classList.contains('hidden');
+  startTimePicker.classList.toggle('hidden', open);
+  startTimeToggle.textContent = open ? 'Started earlier?' : 'Use current time';
+  if (!open) {
+    // Default to 1 hour ago as a helpful starting point
+    const d = new Date(Date.now() - 3_600_000);
+    startTimeInput.value = toLocalDateTimeValue(d);
+  }
+}
+
+function toLocalDateTimeValue(date) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
 
 // Tabs
 document.querySelectorAll('.tab').forEach(tab => {
@@ -146,7 +165,16 @@ function toggleFast() {
 
 function startFast() {
   state.active = true;
-  state.startTime = Date.now();
+  // Use custom start time if set, but don't allow future times
+  if (!startTimePicker.classList.contains('hidden') && startTimeInput.value) {
+    const picked = new Date(startTimeInput.value).getTime();
+    state.startTime = Math.min(picked, Date.now());
+  } else {
+    state.startTime = Date.now();
+  }
+  // Reset the picker back to hidden for next time
+  startTimePicker.classList.add('hidden');
+  startTimeToggle.textContent = 'Started earlier?';
   setupSection.style.opacity = '0.4';
   setupSection.style.pointerEvents = 'none';
   startBtn.textContent = 'End Fast';
