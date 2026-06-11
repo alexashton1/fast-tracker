@@ -28,12 +28,13 @@ body {
   padding: 0 20px 48px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 0;
 }
 
 header {
   padding-top: 28px;
   text-align: center;
+  margin-bottom: 28px;
 }
 
 h1 {
@@ -42,6 +43,7 @@ h1 {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-muted);
+  margin-bottom: 16px;
 }
 
 h2 {
@@ -52,6 +54,36 @@ h2 {
   color: var(--text-muted);
   margin-bottom: 12px;
 }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 4px;
+  gap: 4px;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px 0;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tab.active {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.tab-panel { display: none; flex-direction: column; gap: 28px; }
+.tab-panel.active { display: flex; }
 
 /* Protocol selector */
 .protocol-select { display: flex; flex-direction: column; }
@@ -239,6 +271,173 @@ h2 {
 
 .end-time-row strong { color: var(--accent); }
 
+/* Body tab */
+.body-intro {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.current-stage-card {
+  background: var(--accent-dim);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cs-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.cs-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cs-time {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.cs-desc {
+  font-size: 0.88rem;
+  color: var(--text);
+  line-height: 1.6;
+  margin-top: 4px;
+}
+
+/* Timeline */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+.tl-item {
+  display: flex;
+  gap: 16px;
+  position: relative;
+  padding-bottom: 4px;
+}
+
+.tl-item:last-child .tl-line { display: none; }
+
+.tl-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.tl-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 2px solid var(--surface2);
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: all 0.3s;
+}
+
+.tl-dot.reached {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.tl-dot.current {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-dim);
+  width: 16px;
+  height: 16px;
+}
+
+.tl-line {
+  width: 2px;
+  flex: 1;
+  min-height: 20px;
+  background: var(--surface2);
+  margin: 4px auto 0;
+  transition: background 0.3s;
+}
+
+.tl-line.reached { background: var(--accent); }
+
+.tl-right {
+  padding-bottom: 24px;
+  flex: 1;
+}
+
+.tl-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.tl-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: color 0.3s;
+}
+
+.tl-name.reached { color: var(--text); }
+
+.tl-hours {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: var(--surface);
+  padding: 2px 7px;
+  border-radius: 99px;
+}
+
+.tl-body {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  transition: color 0.3s;
+}
+
+.tl-body.reached { color: var(--text-muted); }
+
+.tl-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tl-tag {
+  font-size: 0.68rem;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 99px;
+  background: var(--surface);
+  color: var(--text-muted);
+  border: 1px solid var(--surface2);
+}
+
+.tl-tag.active-tag {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 /* History */
 .history-section { width: 100%; }
 
@@ -259,9 +458,7 @@ h2 {
 }
 
 .hi-left { display: flex; flex-direction: column; gap: 2px; }
-
 .hi-date { font-size: 0.76rem; color: var(--text-muted); }
-
 .hi-duration { font-size: 1rem; font-weight: 600; color: var(--text); }
 
 .hi-badge {
@@ -296,4 +493,5 @@ h2 {
     --ring-bg: #ddd;
   }
   .btn-start { color: #000; }
+  .tab.active { background: #e0e0e0; }
 }

@@ -1,4 +1,79 @@
-const CIRCUMFERENCE = 2 * Math.PI * 96; // SVG ring r=96
+const CIRCUMFERENCE = 2 * Math.PI * 96;
+
+const STAGES = [
+  {
+    name: 'Digestion',
+    start: 0,
+    end: 1,
+    label: '0 – 1h',
+    summary: 'Digestion phase',
+    description: 'Your body is breaking down your last meal. Blood sugar is elevated and insulin is high, signalling your cells to absorb glucose for energy. Fat burning is essentially switched off during this window.',
+    tags: ['High insulin', 'Blood sugar rising', 'Fat burning off'],
+  },
+  {
+    name: 'Post-absorptive',
+    start: 1,
+    end: 4,
+    label: '1 – 4h',
+    summary: 'Post-absorptive phase',
+    description: 'Digestion is complete. Blood glucose and insulin levels are falling back to baseline. Your body is primarily running on the glucose still circulating in your bloodstream and stored as glycogen in your liver.',
+    tags: ['Insulin dropping', 'Glucose from blood', 'Glycogen in use'],
+  },
+  {
+    name: 'Gluconeogenesis',
+    start: 4,
+    end: 8,
+    label: '4 – 8h',
+    summary: 'Gluconeogenesis begins',
+    description: 'With blood glucose falling, your liver starts producing new glucose from non-carbohydrate sources — mainly amino acids and glycerol from fat. Insulin is now low. Your body is beginning to shift its fuel source.',
+    tags: ['Liver producing glucose', 'Low insulin', 'Fat mobilising'],
+  },
+  {
+    name: 'Glycogen depleting',
+    start: 8,
+    end: 12,
+    label: '8 – 12h',
+    summary: 'Glycogen stores running low',
+    description: 'Your liver\'s glycogen stores are significantly depleted. Growth hormone begins to rise to protect muscle tissue. Your body is ramping up fat breakdown (lipolysis) as a primary energy source is about to switch.',
+    tags: ['Glycogen nearly gone', 'Growth hormone rising', 'Lipolysis increasing'],
+  },
+  {
+    name: 'Ketosis building',
+    start: 12,
+    end: 16,
+    label: '12 – 16h',
+    summary: 'Ketosis beginning',
+    description: 'Fat burning is now well underway. Your liver is converting fatty acids into ketone bodies, which your brain and muscles can use as fuel. Many people notice improved mental clarity and reduced hunger as ketones rise.',
+    tags: ['Ketones rising', 'Fat as primary fuel', 'Mental clarity', 'Hunger reducing'],
+  },
+  {
+    name: 'Deep ketosis',
+    start: 16,
+    end: 20,
+    label: '16 – 20h',
+    summary: 'Deep ketosis',
+    description: 'Ketone levels are significantly elevated. Your brain is now running efficiently on ketones. Inflammation markers often decrease in this phase. Growth hormone peaks — which helps preserve lean muscle while fat is burned.',
+    tags: ['High ketones', 'Anti-inflammatory', 'Growth hormone peak', 'Fat burning peak'],
+  },
+  {
+    name: 'Autophagy active',
+    start: 20,
+    end: 24,
+    label: '20 – 24h',
+    summary: 'Autophagy active',
+    description: 'Autophagy — your body\'s cellular "self-cleaning" process — is now significantly active. Damaged proteins and cellular components are being broken down and recycled. This is one of the most sought-after benefits of extended fasting.',
+    tags: ['Autophagy', 'Cellular repair', 'Protein recycling', 'Deep ketosis'],
+  },
+  {
+    name: 'Extended fast',
+    start: 24,
+    end: Infinity,
+    label: '24h+',
+    summary: 'Extended fast',
+    description: 'You\'re in an extended fast. Autophagy is at its highest levels. Stem cell production may begin to increase. Insulin is at its lowest. This territory requires good preparation and ideally medical guidance for longer durations.',
+    tags: ['Peak autophagy', 'Stem cell activity', 'Very low insulin', 'Deep repair'],
+  },
+];
 
 let state = {
   active: false,
@@ -8,21 +83,38 @@ let state = {
 };
 
 const $ = id => document.getElementById(id);
-const timeDisplay  = $('timeDisplay');
-const phaseLabel   = $('phaseLabel');
-const ringFill     = $('ringFill');
-const startBtn     = $('startBtn');
-const statGoal     = $('statGoal');
-const statPercent  = $('statPercent');
-const statRemaining = $('statRemaining');
-const endTimeRow   = $('endTimeRow');
+const timeDisplay    = $('timeDisplay');
+const phaseLabel     = $('phaseLabel');
+const ringFill       = $('ringFill');
+const startBtn       = $('startBtn');
+const statGoal       = $('statGoal');
+const statPercent    = $('statPercent');
+const statRemaining  = $('statRemaining');
+const endTimeRow     = $('endTimeRow');
 const endTimeDisplay = $('endTimeDisplay');
-const historyList  = $('historyList');
-const emptyHistory = $('emptyHistory');
-const setupSection = $('setupSection');
-const customInput  = $('customInput');
+const historyList    = $('historyList');
+const emptyHistory   = $('emptyHistory');
+const setupSection   = $('setupSection');
+const customInput    = $('customInput');
 const customHoursInput = $('customHours');
+const bodyIntro      = $('bodyIntro');
+const currentStageCard = $('currentStageCard');
+const csName         = $('csName');
+const csTime         = $('csTime');
+const csDesc         = $('csDesc');
+const timeline       = $('timeline');
 
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    $('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+// Protocol buttons
 document.querySelectorAll('.protocol-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     if (state.active) return;
@@ -63,6 +155,7 @@ function startFast() {
   endTimeDisplay.textContent = fmt12(endTime);
   endTimeRow.style.display = '';
   saveState();
+  buildTimeline();
   tick();
   state.timerInterval = setInterval(tick, 1000);
 }
@@ -87,6 +180,10 @@ function stopFast() {
   resetDisplay();
   clearState();
   renderHistory();
+  // Reset body tab
+  bodyIntro.classList.remove('hidden');
+  currentStageCard.classList.add('hidden');
+  buildTimeline();
 }
 
 function tick() {
@@ -97,15 +194,72 @@ function tick() {
 
   timeDisplay.textContent = fmtDuration(elapsed);
   ringFill.style.strokeDashoffset = CIRCUMFERENCE * (1 - pct);
-  ringFill.classList.toggle('done',   pct >= 1 && !overdue);
+  ringFill.classList.toggle('done',    pct >= 1 && !overdue);
   ringFill.classList.toggle('overdue', overdue);
 
+  const currentStage = getStage(elapsed);
   phaseLabel.textContent = overdue
     ? 'Goal reached — +' + fmtDuration(elapsed - goal) + ' over'
-    : phase(elapsed);
+    : currentStage.summary;
 
   statPercent.textContent   = Math.min(Math.round(pct * 100), 100) + '%';
   statRemaining.textContent = overdue ? '✓ done' : fmtDuration(goal - elapsed);
+
+  updateBodyTab(elapsed, currentStage);
+}
+
+function getStage(ms) {
+  const h = ms / 3_600_000;
+  return STAGES.find(s => h >= s.start && h < s.end) || STAGES[STAGES.length - 1];
+}
+
+function updateBodyTab(elapsed, stage) {
+  bodyIntro.classList.add('hidden');
+  currentStageCard.classList.remove('hidden');
+  csName.textContent = stage.name;
+  csTime.textContent = stage.label;
+  csDesc.textContent = stage.description;
+
+  const h = elapsed / 3_600_000;
+
+  // Update timeline dots and lines
+  document.querySelectorAll('.tl-item').forEach((item, i) => {
+    const s = STAGES[i];
+    const dot  = item.querySelector('.tl-dot');
+    const line = item.querySelector('.tl-line');
+    const name = item.querySelector('.tl-name');
+    const body = item.querySelector('.tl-body');
+    const tags = item.querySelectorAll('.tl-tag');
+
+    const reached = h >= s.start;
+    const current = stage === s;
+
+    dot.classList.toggle('reached', reached && !current);
+    dot.classList.toggle('current', current);
+    if (line) line.classList.toggle('reached', h >= s.end);
+    name.classList.toggle('reached', reached);
+    body.classList.toggle('reached', reached);
+    tags.forEach(tag => tag.classList.toggle('active-tag', current));
+  });
+}
+
+function buildTimeline() {
+  timeline.innerHTML = STAGES.map((s, i) => `
+    <div class="tl-item" data-index="${i}">
+      <div class="tl-left">
+        <div class="tl-dot"></div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-right">
+        <div class="tl-header">
+          <span class="tl-name">${s.name}</span>
+          <span class="tl-hours">${s.label}</span>
+        </div>
+        <div class="tl-body">${s.description}</div>
+        <div class="tl-tags">${s.tags.map(t => `<span class="tl-tag">${t}</span>`).join('')}</div>
+      </div>
+    </div>
+  `).join('');
 }
 
 function resetDisplay() {
@@ -115,18 +269,6 @@ function resetDisplay() {
   ringFill.classList.remove('done', 'overdue');
   statPercent.textContent   = '0%';
   statRemaining.textContent = '—';
-}
-
-function phase(ms) {
-  const h = ms / 3_600_000;
-  if (h < 1)  return 'Digestion phase';
-  if (h < 4)  return 'Post-absorptive phase';
-  if (h < 8)  return 'Gluconeogenesis begins';
-  if (h < 12) return 'Glycogen depleting';
-  if (h < 16) return 'Ketosis building';
-  if (h < 20) return 'Deep ketosis';
-  if (h < 24) return 'Autophagy active';
-  return 'Extended fast';
 }
 
 function fmtDuration(ms) {
@@ -148,12 +290,10 @@ function fmt12(date) {
 
 function fmtDate(ts) {
   const d = new Date(ts);
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) +
-    ' at ' + fmt12(d);
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' at ' + fmt12(d);
 }
 
 // History
-
 function addToHistory(entry) {
   const h = getHistory();
   h.unshift(entry);
@@ -191,8 +331,7 @@ function renderHistory() {
   }).join('');
 }
 
-// State persistence
-
+// Persistence
 function saveState() {
   localStorage.setItem('fastState', JSON.stringify({
     startTime: state.startTime,
@@ -227,6 +366,7 @@ function restoreState() {
     startBtn.classList.add('stopping');
     endTimeDisplay.textContent = fmt12(new Date(state.startTime + state.goalHours * 3_600_000));
     endTimeRow.style.display = '';
+    buildTimeline();
     tick();
     state.timerInterval = setInterval(tick, 1000);
   } catch {}
@@ -234,6 +374,7 @@ function restoreState() {
 
 // Boot
 statGoal.textContent = state.goalHours + 'h';
+buildTimeline();
 renderHistory();
 restoreState();
 
