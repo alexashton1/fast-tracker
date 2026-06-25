@@ -65,13 +65,67 @@ const STAGES = [
     tags: ['Autophagy', 'Cellular repair', 'Protein recycling', 'Deep ketosis'],
   },
   {
-    name: 'Extended fast',
+    name: 'Glycogen fully gone',
     start: 24,
+    end: 36,
+    label: '24 – 36h',
+    summary: 'Glycogen fully depleted',
+    description: 'All liver and muscle glycogen stores are now completely exhausted. Your body is running almost entirely on fat and ketones. Autophagy is intensifying. Many people report a noticeable shift in energy — often a calm, steady mental clarity rather than the usual energy peaks and troughs.',
+    tags: ['Zero glycogen', 'Full fat adaptation', 'Deep autophagy', 'Stable energy'],
+  },
+  {
+    name: 'Immune reset begins',
+    start: 36,
+    end: 48,
+    label: '36 – 48h',
+    summary: 'Immune system regenerating',
+    description: 'Research suggests that around 36–48 hours, the body begins breaking down old and damaged immune cells. This triggers the production of fresh immune cells from stem cells. Growth hormone is elevated, actively protecting muscle mass. Ketones are at their highest levels.',
+    tags: ['Immune cell renewal', 'Stem cell activation', 'Peak ketones', 'Muscle preservation'],
+  },
+  {
+    name: 'Deep cellular renewal',
+    start: 48,
+    end: 72,
+    label: '48 – 72h',
+    summary: 'Deep cellular renewal',
+    description: 'You\'re now in the territory of a 3-day fast. Autophagy is at very high levels — your body is aggressively clearing out damaged cells, misfolded proteins, and cellular debris. Studies on fasting suggest significant immune system regeneration is occurring. Insulin is at its absolute lowest, maximising fat burning.',
+    tags: ['Very high autophagy', 'Deep immune reset', 'Lowest insulin ever', 'Maximum fat burning'],
+  },
+  {
+    name: 'Stem cell surge',
+    start: 72,
+    end: 96,
+    label: '72 – 96h',
+    summary: 'Stem cell regeneration peaks',
+    description: 'Around the 72-hour mark, research (notably from Dr Valter Longo at USC) shows a significant surge in stem cell production. Old immune cells that were broken down are being replaced with new ones. The body is essentially performing a partial immune system reboot. This is considered one of the most powerful biological effects of extended fasting.',
+    tags: ['Stem cell surge', 'Immune reboot', 'Cellular regeneration', 'High autophagy'],
+  },
+  {
+    name: 'Metabolic adaptation',
+    start: 96,
+    end: 120,
+    label: '96 – 120h',
+    summary: 'Full metabolic adaptation',
+    description: 'Your body is now fully fat-adapted and running with extraordinary efficiency on ketones. Hunger hormones (ghrelin) have largely subsided — many extended fasters report feeling little hunger at this stage. Your brain is thriving on ketones. Anti-inflammatory effects are pronounced. This is deep fasting territory that warrants medical supervision.',
+    tags: ['Full fat adaptation', 'Hunger suppressed', 'Anti-inflammatory', 'Medical supervision advised'],
+  },
+  {
+    name: 'Extended renewal',
+    start: 120,
+    end: 144,
+    label: '5 – 6 days',
+    summary: 'Extended cellular renewal',
+    description: 'At 5–6 days, you are in rare fasting territory. Autophagy remains elevated. The body continues to conserve protein by becoming increasingly efficient at recycling amino acids. Electrolyte management becomes critical at this stage — sodium, potassium, and magnesium must be supplemented. Medical guidance is strongly recommended.',
+    tags: ['Rare fasting territory', 'Protein recycling', 'Electrolytes critical', 'Medical guidance required'],
+  },
+  {
+    name: '7-day fast',
+    start: 144,
     end: Infinity,
-    label: '24h+',
-    summary: 'Extended fast',
-    description: 'You\'re in an extended fast. Autophagy is at its highest levels. Stem cell production may begin to increase. Insulin is at its lowest. This territory requires good preparation and ideally medical guidance for longer durations.',
-    tags: ['Peak autophagy', 'Stem cell activity', 'Very low insulin', 'Deep repair'],
+    label: '6 – 7 days',
+    summary: '7-day fast',
+    description: 'A full 7-day fast is a serious medical undertaking and should only be done under clinical supervision. At this stage the body has exhausted most available fat stores in leaner individuals and may begin breaking down muscle protein. The cellular regeneration benefits have largely been achieved. Refeeding carefully and slowly is critical to avoid refeeding syndrome.',
+    tags: ['Clinical supervision essential', 'Refeeding care critical', 'Maximum regeneration reached', 'Muscle risk increases'],
   },
 ];
 
@@ -153,7 +207,7 @@ document.querySelectorAll('.protocol-btn').forEach(btn => {
 
 customHoursInput.addEventListener('input', () => {
   const v = parseInt(customHoursInput.value);
-  if (v >= 1 && v <= 72) {
+  if (v >= 1 && v <= 168) {
     state.goalHours = v;
     statGoal.textContent = v + 'h';
   }
