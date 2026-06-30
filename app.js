@@ -202,6 +202,7 @@ document.querySelectorAll('.protocol-btn').forEach(btn => {
       state.goalHours = parseInt(val);
     }
     statGoal.textContent = state.goalHours + 'h';
+    renderGuide();
   });
 });
 
@@ -210,6 +211,7 @@ customHoursInput.addEventListener('input', () => {
   if (v >= 1 && v <= 168) {
     state.goalHours = v;
     statGoal.textContent = v + 'h';
+    renderGuide();
   }
 });
 
@@ -454,10 +456,277 @@ function restoreState() {
   } catch {}
 }
 
+// ─── Guide ───────────────────────────────────────────────────────────────────
+
+const guideContent = $('guideContent');
+
+function guideCategory(hours) {
+  if (hours <= 16)  return 'short';
+  if (hours <= 24)  return 'medium';
+  if (hours <= 72)  return 'extended';
+  return 'prolonged';
+}
+
+const GUIDE_DATA = {
+  during: {
+    hydration: {
+      icon: '💧',
+      title: 'Hydration',
+      content: hours => {
+        const cat = guideCategory(hours);
+        const base = `<ul class="guide-list">
+          <li><strong>Water is your best friend.</strong> Aim for at least 2–3 litres throughout the day. Sip steadily rather than drinking large amounts at once.</li>
+          <li><strong>Black coffee</strong> is fine and can suppress appetite. Limit to 1–2 cups to avoid spiking cortisol.</li>
+          <li><strong>Plain herbal teas</strong> (peppermint, ginger, chamomile) are excellent — warming, calming, and zero calories.</li>
+          <li><strong>Sparkling water</strong> can help with hunger pangs — the bubbles create a feeling of fullness.</li>
+        </ul>`;
+        if (cat === 'short') return base;
+        return base + `<div class="guide-tip">For fasts over 16 hours, add a pinch of quality sea salt or pink Himalayan salt to your water. This replaces sodium lost through reduced food intake and helps prevent headaches.</div>`;
+      },
+    },
+    electrolytes: {
+      icon: '⚡',
+      title: 'Electrolytes',
+      content: hours => {
+        const cat = guideCategory(hours);
+        if (cat === 'short') return `<ul class="guide-list">
+          <li>For a 16h or shorter fast, electrolytes aren't usually necessary — you'll replenish them at your next meal.</li>
+          <li>If you feel lightheaded or get a headache, a pinch of salt in water usually resolves it quickly.</li>
+        </ul>`;
+        if (cat === 'medium') return `<ul class="guide-list">
+          <li><strong>Sodium:</strong> Add a pinch of sea salt to water or have plain salted water once or twice. This is the most important electrolyte during a fast.</li>
+          <li><strong>Potassium:</strong> If your fast runs close to 24h, consider a supplement or a small amount of cream of tartar dissolved in water.</li>
+          <li><strong>Magnesium:</strong> Helps with sleep, cramps, and mood. A magnesium glycinate supplement before bed is ideal.</li>
+        </ul><div class="guide-tip">A simple electrolyte drink: 500ml water + pinch of sea salt + squeeze of lemon. Zero calories, breaks nothing.</div>`;
+        if (cat === 'extended') return `<ul class="guide-list">
+          <li><strong>Sodium (critical):</strong> 1,000–2,000mg per day. Salt your water or use an electrolyte supplement without sugar.</li>
+          <li><strong>Potassium (critical):</strong> 1,000–3,500mg per day. Supplement or use low-sodium salt (which is potassium chloride).</li>
+          <li><strong>Magnesium (critical):</strong> 300–500mg per day. Deficiency causes cramps, poor sleep, and anxiety.</li>
+          <li><strong>Phosphorus:</strong> Usually fine unless the fast extends past 5 days.</li>
+        </ul><div class="guide-alert">Without electrolytes on a multi-day fast, you risk hyponatraemia (low sodium), severe cramping, heart palpitations and fatigue. Do not skip these.</div>`;
+        return `<ul class="guide-list">
+          <li><strong>Sodium:</strong> 2,000–3,000mg daily — salt water multiple times per day.</li>
+          <li><strong>Potassium:</strong> 3,500mg daily — supplement essential.</li>
+          <li><strong>Magnesium:</strong> 400–500mg daily — supplement essential.</li>
+          <li><strong>Phosphorus & Calcium:</strong> Monitor carefully for fasts beyond 5 days.</li>
+        </ul><div class="guide-alert">A fast of this length requires medical supervision. Electrolyte imbalances at this stage can be life-threatening. Please consult a doctor.</div>`;
+      },
+    },
+    activity: {
+      icon: '🚶',
+      title: 'Activity & Exercise',
+      content: hours => {
+        const cat = guideCategory(hours);
+        if (cat === 'short') return `<ul class="guide-list">
+          <li><strong>Light to moderate exercise is absolutely fine</strong> during a 16–18h fast — many people prefer fasted workouts.</li>
+          <li><strong>Strength training:</strong> Fine, but strength may feel slightly reduced. Have your meal shortly after to aid recovery.</li>
+          <li><strong>Cardio:</strong> Fasted cardio is excellent for fat burning — a 30–45 min walk or easy run works well.</li>
+          <li><strong>HIIT:</strong> Possible but may feel harder. Listen to your body.</li>
+        </ul>`;
+        if (cat === 'medium') return `<ul class="guide-list">
+          <li><strong>Light walking</strong> (20–30 mins) is ideal and helps manage hunger.</li>
+          <li><strong>Avoid heavy weight training</strong> past the 20h mark — muscle breakdown risk increases without fuel.</li>
+          <li><strong>Yoga and stretching</strong> are excellent — gentle movement aids circulation without taxing your system.</li>
+          <li>If you feel dizzy or lightheaded during exercise, stop and have some salted water.</li>
+        </ul>`;
+        return `<ul class="guide-list">
+          <li><strong>Gentle walking only.</strong> 15–20 minute walks help with circulation and keep energy moving without stressing your body.</li>
+          <li><strong>No gym, no HIIT, no heavy lifting.</strong> Your body is in repair mode — intense exercise competes with that process.</li>
+          <li><strong>Rest is productive.</strong> Sleep, reading, light tasks. Your body is doing significant work at a cellular level.</li>
+          <li>If you feel weak, dizzy, or your heart races — stop activity and rest immediately.</li>
+        </ul><div class="guide-alert">Extended fasting puts significant stress on the body. Vigorous exercise during this period can be dangerous.</div>`;
+      },
+    },
+    mindset: {
+      icon: '🧠',
+      title: 'Managing Hunger & Mindset',
+      content: hours => `<ul class="guide-list">
+        <li><strong>Hunger comes in waves.</strong> It peaks and then passes — usually within 20 minutes. Ride it out with water or tea.</li>
+        <li><strong>Distraction is your best tool.</strong> Hunger is much louder when you're bored. Stay engaged with work, hobbies, or social activity.</li>
+        <li><strong>Don't watch food content.</strong> Cooking videos, food ads, and recipe browsing amplify hunger signals significantly.</li>
+        <li><strong>Black coffee or green tea</strong> suppress ghrelin (the hunger hormone) for 1–2 hours.</li>
+        <li><strong>Brush your teeth.</strong> A clean mouth reduces food cravings and signals to the brain that eating is "done."</li>
+        <li><strong>Sleep through the hard part.</strong> Starting your fast after dinner means you sleep through 6–8 hours of it.</li>
+        <li><strong>Remember it's not real hunger.</strong> True physiological hunger takes days to set in. Early hunger is hormonal — your body is used to eating at certain times.</li>
+      </ul>${hours >= 48 ? '<div class="guide-tip">After 48 hours, ghrelin (the hunger hormone) typically drops significantly. Many extended fasters report that day 3 is actually easier than day 2.</div>' : ''}`,
+    },
+    sleep: {
+      icon: '😴',
+      title: 'Sleep',
+      content: hours => {
+        const ext = hours >= 48;
+        return `<ul class="guide-list">
+          <li><strong>Sleep quality often improves</strong> during fasting — ketones are a clean fuel for the brain and many people report deeper, more restful sleep.</li>
+          <li>Take magnesium glycinate before bed — it promotes relaxation and sleep depth, and is commonly depleted during fasting.</li>
+          <li>You may feel <strong>cooler than usual</strong> at night — your metabolic rate drops slightly during a fast. Have an extra blanket ready.</li>
+          ${ext ? '<li>During multi-day fasts, napping is encouraged. Your body is doing intensive repair work and rest maximises this.</li>' : ''}
+        </ul>`;
+      },
+    },
+  },
+  breaking: {
+    protocol: hours => {
+      const cat = guideCategory(hours);
+      if (cat === 'short') return {
+        title: 'Breaking a Short Fast (up to 16h)',
+        steps: [
+          { title: 'Eat normally — no special protocol needed', body: 'After a 16h fast your digestive system is perfectly capable of handling a normal meal. No need for special refeeding.' },
+          { title: 'Prioritise protein and vegetables first', body: 'Starting with protein (eggs, chicken, fish) and fibre (vegetables, salad) helps stabilise blood sugar before carbohydrates.' },
+          { title: 'Avoid a huge binge', body: 'The temptation is to overeat after fasting. Eat mindfully — your stomach may feel smaller than usual. Stop when you\'re satisfied, not stuffed.' },
+          { title: 'Avoid ultra-processed foods as your first meal', body: 'Refined carbs and sugars will spike insulin hard after a fast. A balanced whole-food meal makes the most of the metabolic benefits you\'ve just built up.' },
+        ],
+        avoid: null,
+        tip: 'Good first meals: eggs with avocado and greens, grilled salmon with roasted vegetables, a Greek salad with chicken.',
+      };
+      if (cat === 'medium') return {
+        title: 'Breaking a Medium Fast (16–24h)',
+        steps: [
+          { title: 'Start small — don\'t jump straight to a full meal', body: 'After 18–24h, give your digestive system 15–30 minutes to wake up before your main meal.' },
+          { title: 'Option 1: A small snack first', body: 'A small handful of nuts, a boiled egg, or a few olives. Something with fat and protein, low in carbs. Wait 20 minutes.' },
+          { title: 'Option 2: Bone broth', body: 'Warm bone broth is ideal — it\'s rich in collagen, minerals, and electrolytes, and is very gentle on the gut.' },
+          { title: 'Then eat a normal balanced meal', body: 'Protein + healthy fats + vegetables. Introduce carbohydrates last, and choose complex sources (sweet potato, brown rice, legumes) over refined ones.' },
+        ],
+        avoid: 'Sugary drinks, alcohol, large portions of refined carbs, and raw cruciferous vegetables (like broccoli or cabbage) as your very first food — these can cause significant bloating.',
+        tip: 'Ideal first meal: bone broth → grilled fish or chicken with roasted vegetables and a small portion of sweet potato.',
+      };
+      if (cat === 'extended') return {
+        title: 'Breaking an Extended Fast (24–72h)',
+        steps: [
+          { title: 'Bone broth first — 30–60 minutes before anything else', body: 'Warm, salty bone broth gently reawakens your digestive system, replenishes electrolytes, and prepares your gut lining for food.' },
+          { title: 'Soft, easily digestible foods next', body: 'Scrambled eggs, avocado, steamed fish, soft-cooked vegetables, yoghurt. Your gut enzymes and stomach acid are lower after an extended fast and need time to ramp back up.' },
+          { title: 'Reintroduce carbohydrates slowly', body: 'Wait until your second or third meal before introducing carbohydrates. Start with small amounts of easily digested sources: banana, white rice, sweet potato.' },
+          { title: 'Eat small portions and eat slowly', body: 'Your stomach has contracted during the fast. Overeating will be uncomfortable and can cause nausea. Small meals, chewed thoroughly.' },
+          { title: 'Continue electrolyte supplementation', body: 'Refeeding can cause a shift in electrolytes (particularly phosphorus). Continue taking electrolytes for at least 24 hours after breaking the fast.' },
+        ],
+        avoid: 'Large meals, raw vegetables, high-fibre foods, alcohol, processed sugars, and dairy in large quantities as your first foods. These can cause severe digestive distress.',
+        tip: null,
+      };
+      return {
+        title: 'Breaking a Prolonged Fast (72h+)',
+        steps: [
+          { title: 'Medical guidance strongly recommended', body: 'Breaking a fast of this length incorrectly can cause refeeding syndrome — a potentially life-threatening shift in electrolytes. Please consult a doctor before breaking.' },
+          { title: 'Day 1 of refeeding — liquids only', body: 'Bone broth, vegetable broth, diluted fruit juice. Very small amounts (a cup every 2–3 hours). No solid food on day 1.' },
+          { title: 'Day 2 — soft solids only', body: 'Scrambled eggs, avocado, steamed fish, soft cooked vegetables. Still small portions. No carbohydrates yet.' },
+          { title: 'Day 3 — slowly reintroduce carbohydrates', body: 'A small amount of white rice or banana. Monitor how you feel carefully. Continue eating small portions, multiple times a day.' },
+          { title: 'Continue electrolyte supplementation throughout', body: 'Phosphorus in particular is critical during refeeding. A doctor may recommend a specific electrolyte protocol.' },
+        ],
+        avoid: 'Any large meals, alcohol, processed foods, high-sugar foods, raw vegetables, or large quantities of carbohydrates. Refeeding syndrome is real and serious.',
+        tip: null,
+      };
+    },
+  },
+  meals: hours => {
+    const cat = guideCategory(hours);
+    const base = [
+      { icon: '🥚', title: 'Eggs', body: 'The ideal fast-breaking food. High in protein and healthy fats, easy to digest, and highly satiating. Scrambled, poached, or boiled.' },
+      { icon: '🥑', title: 'Avocado', body: 'Rich in healthy monounsaturated fats and potassium. Excellent for replenishing electrolytes and providing sustained energy.' },
+      { icon: '🐟', title: 'Oily fish', body: 'Salmon, mackerel, and sardines provide omega-3s, high-quality protein, and healthy fats — ideal for reducing inflammation after a fast.' },
+      { icon: '🍗', title: 'Lean protein', body: 'Chicken breast, turkey, or lean beef. Protein is the priority — it supports muscle repair, keeps you full, and stabilises blood sugar.' },
+      { icon: '🥬', title: 'Cooked leafy greens', body: 'Spinach, kale, and Swiss chard. Rich in minerals and easy on the gut when cooked. Avoid raw in large quantities immediately post-fast.' },
+      { icon: '🍠', title: 'Sweet potato', body: 'A gentle carbohydrate source, rich in potassium and fibre. Better than refined carbs for your first carb reintroduction.' },
+    ];
+    if (cat === 'short') {
+      base.push({ icon: '🫐', title: 'Berries', body: 'High in antioxidants, low in sugar, and easy to digest. A great way to reintroduce natural sugars gently.' });
+      base.push({ icon: '🥗', title: 'Mixed salad with olive oil', body: 'Olive oil provides healthy fats and anti-inflammatory compounds. Pair with protein for a balanced, nutrient-dense first meal.' });
+    }
+    if (cat !== 'short') {
+      base.unshift({ icon: '🦴', title: 'Bone broth', body: 'The gold standard for breaking longer fasts. Rich in collagen, glycine, glutamine, and electrolytes. Heals and prepares the gut lining for solid food.' });
+    }
+    return base;
+  },
+  avoid: hours => {
+    const cat = guideCategory(hours);
+    const common = [
+      { icon: '🍬', title: 'Sugary foods & drinks', body: 'A sugar spike immediately after fasting will crash your insulin hard and undo much of the metabolic work of your fast. Avoid juice, sweets, and fizzy drinks.' },
+      { icon: '🍺', title: 'Alcohol', body: 'Your liver is already working hard processing the metabolic changes of the fast. Alcohol adds significant stress and will hit much harder than usual on an empty stomach.' },
+      { icon: '🍕', title: 'Ultra-processed foods', body: 'High in refined carbs, seed oils, and additives. Your gut is sensitive post-fast — these will cause bloating, insulin spikes, and undermine your fast\'s benefits.' },
+    ];
+    if (cat !== 'short') {
+      common.push({ icon: '🥦', title: 'Raw cruciferous vegetables', body: 'Broccoli, cauliflower, and cabbage are excellent foods normally, but on a post-fast gut they cause severe bloating and discomfort. Cook them thoroughly first.' });
+      common.push({ icon: '🫘', title: 'Large portions of beans & legumes', body: 'High fibre content can overwhelm a post-fast digestive system. Introduce slowly and in small amounts after longer fasts.' });
+    }
+    if (cat === 'extended' || cat === 'prolonged') {
+      common.push({ icon: '🍝', title: 'Large carbohydrate portions', body: 'A huge plate of pasta or rice after a 48h+ fast can cause severe digestive distress and significant blood sugar swings. Reintroduce carbs slowly and in small amounts.' });
+    }
+    return common;
+  },
+};
+
+function renderGuide() {
+  const hours = state.goalHours;
+  const active = state.active;
+  const cat = guideCategory(hours);
+  const protocol = GUIDE_DATA.breaking.protocol(hours);
+  const meals = GUIDE_DATA.meals(hours);
+  const avoid = GUIDE_DATA.avoid(hours);
+  const duringCards = GUIDE_DATA.during;
+
+  const catLabel = { short: 'Short fast', medium: 'Medium fast', extended: 'Extended fast', prolonged: 'Prolonged fast' }[cat];
+
+  function card(icon, title, bodyHtml, id) {
+    return `<div class="guide-card" id="gc-${id}">
+      <div class="guide-card-header" onclick="toggleGuideCard('gc-${id}')">
+        <span class="guide-icon">${icon}</span>
+        <span class="guide-card-title">${title}</span>
+        <span class="guide-chevron">▶</span>
+      </div>
+      <div class="guide-card-body">${bodyHtml}</div>
+    </div>`;
+  }
+
+  const duringHtml = Object.entries(duringCards).map(([key, def]) =>
+    card(def.icon, def.title, def.content(hours), 'during-' + key)
+  ).join('');
+
+  const breakStepsHtml = protocol.steps.map((s, i) => `
+    <div class="guide-meal-step">
+      <div class="guide-step-num">${i + 1}</div>
+      <div class="guide-step-text"><strong>${s.title}</strong><br>${s.body}</div>
+    </div>`).join('');
+  const breakAvoidHtml = protocol.avoid ? `<div class="guide-alert"><strong>Avoid:</strong> ${protocol.avoid}</div>` : '';
+  const breakTipHtml   = protocol.tip   ? `<div class="guide-tip">${protocol.tip}</div>` : '';
+  const breakHtml = breakStepsHtml + breakAvoidHtml + breakTipHtml;
+
+  const mealsHtml = meals.map(m =>
+    card(m.icon, m.title, `<p>${m.body}</p>`, 'meal-' + m.title.replace(/\s/g,''))
+  ).join('');
+
+  const avoidHtml = avoid.map(a =>
+    card(a.icon, a.title, `<p>${a.body}</p>`, 'avoid-' + a.title.replace(/\s/g,''))
+  ).join('');
+
+  guideContent.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:28px">
+      <div class="guide-section">
+        <div class="guide-section-title">During your fast &mdash; ${catLabel}</div>
+        ${duringHtml}
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Breaking your fast</div>
+        ${card('🍽️', protocol.title, breakHtml, 'break-protocol')}
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">Best foods to eat post-fast</div>
+        ${mealsHtml}
+      </div>
+      <div class="guide-section">
+        <div class="guide-section-title">What to avoid post-fast</div>
+        ${avoidHtml}
+      </div>
+    </div>
+  `;
+}
+
+function toggleGuideCard(id) {
+  const card = $(id);
+  if (card) card.classList.toggle('open');
+}
+
 // Boot
 statGoal.textContent = state.goalHours + 'h';
 buildTimeline();
 renderHistory();
+renderGuide();
 restoreState();
 
 if ('serviceWorker' in navigator) {

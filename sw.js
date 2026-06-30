@@ -1,4 +1,4 @@
-const CACHE = 'fast-tracker-v3';
+const CACHE = 'fast-tracker-v4';
 const ASSETS = [
   '/fast-tracker/',
   '/fast-tracker/index.html',
